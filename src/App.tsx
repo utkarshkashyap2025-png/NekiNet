@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/layout/Navbar';
 import { HeroSection } from './components/landing/HeroSection';
 import { ImpactStats } from './components/landing/ImpactStats';
@@ -9,46 +9,72 @@ import { TestimonialsSection } from './components/landing/TestimonialsSection';
 import { Footer } from './components/layout/Footer';
 import { RequesterDashboard } from './components/requester/RequesterDashboard';
 import { VolunteerDashboard } from './components/volunteer/VolunteerDashboard';
-import { INITIAL_MOCK_REQUESTS, INITIAL_MOCK_VOLUNTEER } from './data/mockData';
+import { AuthModal } from './components/auth/AuthModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { supabaseService } from './services/supabaseService';
 import type { HelpRequest, VolunteerProfile } from './types';
-import { Info, Sparkles, CheckCircle2 } from 'lucide-react';
+import { INITIAL_MOCK_REQUESTS, INITIAL_MOCK_VOLUNTEER } from './data/mockData';
+import { CheckCircle2, Database, AlertCircle } from 'lucide-react';
 
-export function App() {
+function AppContent() {
+  const { isConfigured, user } = useAuth();
   const [currentView, setCurrentView] = useState<'landing' | 'requester' | 'volunteer'>('landing');
   const [requests, setRequests] = useState<HelpRequest[]>(INITIAL_MOCK_REQUESTS);
   const [volunteerProfile, setVolunteerProfile] = useState<VolunteerProfile>(INITIAL_MOCK_VOLUNTEER);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalDefaultRole, setAuthModalDefaultRole] = useState<'requester' | 'volunteer'>('requester');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Requester Actions
-  const handleCreateRequest = (newReqData: Omit<HelpRequest, 'id' | 'createdAt' | 'distanceKm'>) => {
-    const newRequest: HelpRequest = {
-      ...newReqData,
-      id: `req-${Date.now().toString().slice(-4)}`,
-      createdAt: 'Just now',
-      distanceKm: 0.5, // Relative mock distance for demonstration
-    };
+  // Load requests and profile on startup from Supabase (or fallback)
+  useEffect(() => {
+    async function loadData() {
+      const loadedRequests = await supabaseService.getHelpRequests();
+      setRequests(loadedRequests);
 
-    setRequests([newRequest, ...requests]);
-    showToast('✨ Your help request has been broadcasted to nearby neighbors!');
+      const loadedProfile = await supabaseService.getVolunteerProfile(user?.id);
+      setVolunteerProfile(loadedProfile);
+    }
+    loadData();
+  }, [user]);
+
+  // Requester Actions
+  const handleCreateRequest = async (newReqData: Omit<HelpRequest, 'id' | 'createdAt' | 'distanceKm'>) => {
+    const created = await supabaseService.createHelpRequest(newReqData);
+    setRequests((prev) => [created, ...prev]);
+    showToast(
+      isConfigured
+        ? '✨ Saved to Supabase PostgreSQL and broadcasted to local radius!'
+        : '✨ Broadcasted to local radius (Demo Mode)'
+    );
   };
 
-  const handleCancelRequest = (requestId: string) => {
-    setRequests(
-      requests.map((r) =>
-        r.id === requestId ? { ...r, status: 'cancelled' } : r
-      )
+  const handleCancelRequest = async (requestId: string) => {
+    await supabaseService.updateRequestStatus(requestId, 'cancelled');
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status: 'cancelled' } : r))
     );
     showToast('Your request has been cancelled.');
   };
 
-  const handleSubmitFeedback = (requestId: string, rating: number, comment: string) => {
-    setRequests(
-      requests.map((r) =>
+  const handleSubmitFeedback = async (requestId: string, rating: number, comment: string) => {
+    const target = requests.find((r) => r.id === requestId);
+    if (target) {
+      await supabaseService.submitFeedback(
+        requestId,
+        target.requesterId,
+        target.volunteerId || volunteerProfile.id,
+        rating,
+        comment
+      );
+    }
+
+    setRequests((prev) =>
+      prev.map((r) =>
         r.id === requestId
           ? {
               ...r,
@@ -58,27 +84,27 @@ export function App() {
                 rating,
                 comment,
                 createdAt: 'Just now',
-                volunteerGratitude: 'Thank you for your warm words! Glad to assist.',
+                volunteerGratitude: 'Thank you for your heartfelt words! Glad to assist.',
               },
             }
           : r
       )
     );
 
-    // Update volunteer stats
     setVolunteerProfile((prev) => ({
       ...prev,
       completedTasksCount: prev.completedTasksCount + 1,
       rating: Number(((prev.rating * prev.completedTasksCount + rating) / (prev.completedTasksCount + 1)).toFixed(1)),
     }));
 
-    showToast('⭐ Thank you for rating and reviewing your volunteer!');
+    showToast('⭐ Feedback saved! Community trust score updated.');
   };
 
   // Volunteer Actions
-  const handleAcceptTask = (requestId: string) => {
-    setRequests(
-      requests.map((r) =>
+  const handleAcceptTask = async (requestId: string) => {
+    await supabaseService.updateRequestStatus(requestId, 'matched', volunteerProfile.id);
+    setRequests((prev) =>
+      prev.map((r) =>
         r.id === requestId
           ? {
               ...r,
@@ -90,23 +116,21 @@ export function App() {
           : r
       )
     );
-    showToast(`🤝 You accepted task #${requestId}. Contact details now unlocked.`);
+    showToast(`🤝 Task accepted! Requester contact details unlocked.`);
   };
 
-  const handleStartTask = (requestId: string) => {
-    setRequests(
-      requests.map((r) =>
-        r.id === requestId ? { ...r, status: 'in_progress' } : r
-      )
+  const handleStartTask = async (requestId: string) => {
+    await supabaseService.updateRequestStatus(requestId, 'in_progress');
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status: 'in_progress' } : r))
     );
     showToast(`Task #${requestId} is now marked In Progress.`);
   };
 
-  const handleCompleteTask = (requestId: string) => {
-    setRequests(
-      requests.map((r) =>
-        r.id === requestId ? { ...r, status: 'completed' } : r
-      )
+  const handleCompleteTask = async (requestId: string) => {
+    await supabaseService.updateRequestStatus(requestId, 'completed');
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status: 'completed' } : r))
     );
     setVolunteerProfile((prev) => ({
       ...prev,
@@ -115,9 +139,15 @@ export function App() {
     showToast(`🎉 Excellent work! Task #${requestId} marked as Completed.`);
   };
 
-  const handleUpdateVolunteerProfile = (updated: VolunteerProfile) => {
+  const handleUpdateVolunteerProfile = async (updated: VolunteerProfile) => {
+    await supabaseService.updateVolunteerProfile(updated);
     setVolunteerProfile(updated);
-    showToast('Volunteer profile settings updated successfully.');
+    showToast('Volunteer profile & skills synchronized.');
+  };
+
+  const openAuthWithRole = (role: 'requester' | 'volunteer') => {
+    setAuthModalDefaultRole(role);
+    setIsAuthModalOpen(true);
   };
 
   return (
@@ -133,12 +163,22 @@ export function App() {
         </div>
       )}
 
-      {/* Top Banner Notice */}
-      <div className="bg-slate-900 text-slate-200 px-4 py-2 text-center text-xs font-medium flex items-center justify-center gap-2 border-b border-slate-800">
-        <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span>
-          <strong>NekiNet Phase 2 Active:</strong> Requester & Volunteer Dashboards with simulated AI parsing placeholder & local workflow state.
-        </span>
+      {/* Top Banner Notice: Live vs Demo */}
+      <div className={`px-4 py-2 text-center text-xs font-medium flex items-center justify-center gap-2 border-b ${
+        isConfigured 
+          ? 'bg-emerald-950 text-emerald-200 border-emerald-900' 
+          : 'bg-slate-900 text-slate-300 border-slate-800'
+      }`}>
+        <Database className={`w-3.5 h-3.5 ${isConfigured ? 'text-emerald-400' : 'text-amber-400'}`} />
+        {isConfigured ? (
+          <span>
+            <strong>Supabase Connected:</strong> PostgreSQL database & Row Level Security active.
+          </span>
+        ) : (
+          <span>
+            <strong>Phase 3 Backend:</strong> Supabase schema & RLS migrations ready. Operating in safe demo fallback until <code className="bg-slate-800 px-1.5 py-0.5 rounded text-amber-300">.env.local</code> credentials are added.
+          </span>
+        )}
       </div>
 
       {/* Navigation */}
@@ -147,6 +187,7 @@ export function App() {
         onNavigate={(view) => setCurrentView(view)}
         onRequestClick={() => setCurrentView('requester')}
         onVolunteerClick={() => setCurrentView('volunteer')}
+        onOpenAuthModal={() => openAuthWithRole('requester')}
       />
 
       {/* Main View Router */}
@@ -202,7 +243,25 @@ export function App() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Supabase Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        defaultRole={authModalDefaultRole}
+        onAuthSuccess={() => {
+          showToast('Authentication updated.');
+        }}
+      />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
