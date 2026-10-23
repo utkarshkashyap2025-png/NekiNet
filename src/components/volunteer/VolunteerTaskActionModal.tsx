@@ -6,11 +6,7 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   Phone, 
-  Sparkles, 
-  ArrowRight,
-  AlertTriangle,
-  Play,
-  Heart
+  Play
 } from 'lucide-react';
 import type { HelpRequest, VolunteerProfile } from '../../types';
 

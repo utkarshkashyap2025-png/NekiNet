@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import type { HelpRequest } from '../../types';
 import { getFuzzedCoordinates, formatDistance } from '../../lib/geoUtils';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface LeafletMapProps {
   userLocation: { lat: number; lng: number; label: string };
@@ -72,7 +72,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       map.remove();
       mapInstanceRef.current = null;
     };
-  }, []);
+  }, [userLocation.lat, userLocation.lng]);
 
   // Update User Location Marker & Radius Coverage Circle
   useEffect(() => {

@@ -2,12 +2,8 @@ import React, { useState } from 'react';
 import { 
   Plus, 
   Search, 
-  Filter, 
   MapPin, 
-  Clock, 
-  Sparkles, 
   AlertCircle, 
-  CheckCircle2, 
   ArrowRight,
   Heart,
   Pill,

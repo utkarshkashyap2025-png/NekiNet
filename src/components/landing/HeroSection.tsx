@@ -9,8 +9,7 @@ import {
   Users, 
   Heart, 
   Send,
-  Loader2,
-  AlertCircle
+  Loader2
 } from 'lucide-react';
 
 interface HeroSectionProps {

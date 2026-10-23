@@ -16,7 +16,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { supabaseService } from './services/supabaseService';
 import type { HelpRequest, VolunteerProfile } from './types';
 import { INITIAL_MOCK_REQUESTS, INITIAL_MOCK_VOLUNTEER } from './data/mockData';
-import { CheckCircle2, Database, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Database } from 'lucide-react';
 
 function AppContent() {
   const { isConfigured, user } = useAuth();

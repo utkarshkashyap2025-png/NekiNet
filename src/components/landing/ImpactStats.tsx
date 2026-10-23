@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Clock, MapPin, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { Clock, MapPin, ShieldCheck, HeartHandshake } from 'lucide-react';
 
 export const ImpactStats: React.FC = () => {
   const stats = [

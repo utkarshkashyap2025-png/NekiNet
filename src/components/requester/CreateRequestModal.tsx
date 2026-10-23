@@ -4,16 +4,12 @@ import {
   Sparkles, 
   MapPin, 
   AlertTriangle, 
-  Clock, 
   HeartHandshake, 
   Send, 
-  Check, 
   Info,
   Wand2,
   Loader2,
-  ShieldAlert,
   CheckCircle2,
-  Edit3,
   Bot
 } from 'lucide-react';
 import type { HelpRequest, RequestCategory, UrgencyLevel } from '../../types';
@@ -408,6 +404,12 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
               className="w-full text-xs sm:text-sm p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
             />
           </div>
+
+          {safetyNotes && (
+            <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+              <strong>Safety Guidance:</strong> {safetyNotes}
+            </div>
+          )}
 
           {/* Contact Details */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">

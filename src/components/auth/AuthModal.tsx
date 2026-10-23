@@ -4,10 +4,8 @@ import {
   Lock, 
   Mail, 
   User, 
-  ShieldCheck, 
   AlertCircle, 
   CheckCircle2, 
-  Sparkles, 
   ArrowRight,
   Database
 } from 'lucide-react';

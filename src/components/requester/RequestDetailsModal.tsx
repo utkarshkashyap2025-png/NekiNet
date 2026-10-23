@@ -9,7 +9,6 @@ import {
   CheckCircle2, 
   Sparkles, 
   Star,
-  Shield,
   Heart
 } from 'lucide-react';
 import type { HelpRequest, RequestStatus } from '../../types';

@@ -1,23 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { 
   MapPin, 
-  Filter, 
   Search, 
-  Sliders, 
   Crosshair, 
-  ShieldCheck, 
   AlertCircle, 
-  HeartHandshake, 
-  Clock, 
-  Sparkles,
   ArrowRight,
-  Eye,
-  CheckCircle2,
-  Layers,
   Map as MapIcon,
   List as ListIcon
 } from 'lucide-react';
-import type { HelpRequest, VolunteerProfile, RequestCategory } from '../../types';
+import type { HelpRequest, VolunteerProfile } from '../../types';
 import { LeafletMap } from './LeafletMap';
 import { useUserLocation, POPULAR_NEIGHBORHOOD_AREAS } from '../../hooks/useUserLocation';
 import { calculateHaversineDistance, formatDistance } from '../../lib/geoUtils';
@@ -26,16 +17,14 @@ interface HyperlocalExploreViewProps {
   requests: HelpRequest[];
   volunteerProfile: VolunteerProfile;
   onSelectRequest: (request: HelpRequest) => void;
-  onSwitchToRequester: () => void;
-  onSwitchToVolunteer: () => void;
+  onSwitchToRequester?: () => void;
+  onSwitchToVolunteer?: () => void;
 }
 
 export const HyperlocalExploreView: React.FC<HyperlocalExploreViewProps> = ({
   requests,
   volunteerProfile,
   onSelectRequest,
-  onSwitchToRequester,
-  onSwitchToVolunteer,
 }) => {
   const { location, requestBrowserLocation, setManualLocation } = useUserLocation();
 
@@ -98,8 +87,6 @@ export const HyperlocalExploreView: React.FC<HyperlocalExploreViewProps> = ({
       })
       .sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
   }, [requests, location, selectedRadiusKm, selectedCategory, skillsOnlyMatch, searchQuery, volunteerProfile.skills]);
-
-  const selectedRequest = requests.find((r) => r.id === selectedRequestId);
 
   return (
     <div className="py-6 bg-slate-50 min-h-[calc(100vh-80px)] flex flex-col">
@@ -299,18 +286,12 @@ export const HyperlocalExploreView: React.FC<HyperlocalExploreViewProps> = ({
             {filteredRequests.length > 0 ? (
               filteredRequests.map((req) => {
                 const isSelected = req.id === selectedRequestId;
-                const skillMatches = req.requiredSkills.filter((s) =>
-                  volunteerProfile.skills.includes(s)
-                );
 
                 return (
                   <div
                     key={req.id}
                     onClick={() => {
                       setSelectedRequestId(req.id);
-                      if (mobileTab === 'list') {
-                        // Switch to map or view
-                      }
                     }}
                     className={`p-4 rounded-xl border transition cursor-pointer bg-white ${
                       isSelected

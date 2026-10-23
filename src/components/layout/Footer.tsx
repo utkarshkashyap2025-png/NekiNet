@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartHandshake, Sparkles, Heart, Mail, ShieldAlert, Globe, MessageSquare } from 'lucide-react';
+import { HeartHandshake, Heart, Mail, ShieldAlert, Globe, MessageSquare } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -103,7 +103,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom bar */}
         <div className="pt-8 mt-12 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} NekiNet Platform. Open community assistance.</p>
+          <p>© 2026 NekiNet Platform. Open community assistance.</p>
           <div className="flex items-center gap-1">
             <span>Built with care for humanity</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />

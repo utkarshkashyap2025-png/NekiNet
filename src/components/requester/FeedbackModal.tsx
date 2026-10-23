@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Star, Heart, Send } from 'lucide-react';
+import { X, Star, Send } from 'lucide-react';
 import type { HelpRequest } from '../../types';
 
 interface FeedbackModalProps {

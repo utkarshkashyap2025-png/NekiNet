@@ -280,7 +280,7 @@ export const supabaseService = {
         rating: data.rating || 5.0,
         joinedDate: new Date(data.created_at).toLocaleDateString(),
       };
-    } catch (err) {
+    } catch (_err) {
       return localVolunteerCache;
     }
   },

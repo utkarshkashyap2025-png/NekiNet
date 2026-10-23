@@ -7,12 +7,9 @@ import {
   Clock, 
   Sliders, 
   Search, 
-  Filter, 
   ArrowRight, 
-  Sparkles, 
   HeartHandshake, 
   AlertCircle,
-  Phone,
   HelpCircle,
   Pill,
   Heart,
@@ -20,7 +17,6 @@ import {
   Laptop,
   CloudLightning,
   Dog,
-  Eye,
   Check
 } from 'lucide-react';
 import type { HelpRequest, VolunteerProfile, RequestCategory } from '../../types';
@@ -220,17 +216,32 @@ export const VolunteerDashboard: React.FC<VolunteerDashboardProps> = ({
             </button>
           </div>
 
-          {/* Search bar for open requests */}
+          {/* Category filter & Search bar for open requests */}
           {activeTab === 'nearby' && (
-            <div className="relative w-64 hidden sm:block">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search nearby requests..."
-                className="w-full text-xs pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
-              />
+            <div className="flex items-center gap-2">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="hidden sm:block text-xs p-2 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-700"
+              >
+                <option value="all">All Domains</option>
+                <option value="pharmacy_runs">💊 Pharmacy</option>
+                <option value="elderly_care">👵 Elderly Care</option>
+                <option value="groceries_errands">🛒 Groceries</option>
+                <option value="tech_support">💻 Tech Support</option>
+                <option value="pet_care">🐕 Pet Care</option>
+              </select>
+
+              <div className="relative w-56 hidden sm:block">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search nearby requests..."
+                  className="w-full text-xs pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                />
+              </div>
             </div>
           )}
         </div>

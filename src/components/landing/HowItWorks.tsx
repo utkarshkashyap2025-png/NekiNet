@@ -3,9 +3,7 @@ import {
   Sparkles, 
   MapPin, 
   CheckCircle, 
-  ShieldCheck, 
   UserCheck, 
-  Send, 
   Heart, 
   Bell,
   ArrowRight

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, UserCheck, Shield, Check, MapPin, Sliders, Save } from 'lucide-react';
+import { X, UserCheck, Check, MapPin, Save } from 'lucide-react';
 import type { VolunteerProfile } from '../../types';
 import { AVAILABLE_SKILLS_LIST } from '../../data/mockData';
 
