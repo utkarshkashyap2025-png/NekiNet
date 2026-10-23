@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
-import { HeartHandshake, ShieldCheck, MapPin, Sparkles, Menu, X, ArrowRight, UserPlus, HelpCircle } from 'lucide-react';
+import { 
+  HeartHandshake, 
+  ShieldCheck, 
+  MapPin, 
+  Sparkles, 
+  Menu, 
+  X, 
+  ArrowRight, 
+  UserPlus, 
+  Home,
+  UserCheck
+} from 'lucide-react';
 
 interface NavbarProps {
+  currentView: 'landing' | 'requester' | 'volunteer';
+  onNavigate: (view: 'landing' | 'requester' | 'volunteer') => void;
   onRequestClick?: () => void;
   onVolunteerClick?: () => void;
-  onExploreMapClick?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
+  currentView,
+  onNavigate,
   onRequestClick,
   onVolunteerClick,
-  onExploreMapClick,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -18,8 +31,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
+          
+          {/* Logo (clickable to return home) */}
+          <button
+            onClick={() => onNavigate('landing')}
+            className="flex items-center gap-3 text-left focus:outline-none"
+          >
             <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 ring-2 ring-emerald-100">
               <HeartHandshake className="h-6 w-6" />
             </div>
@@ -30,54 +47,80 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   <Sparkles className="w-2.5 h-2.5 mr-1 text-emerald-600" />
-                  AI Hyperlocal
+                  Hyperlocal
                 </span>
               </div>
               <p className="text-xs text-slate-500 hidden sm:block -mt-0.5">
                 Neighborhood Kindness & Volunteer Aid
               </p>
             </div>
-          </div>
+          </button>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600">
-            <a href="#how-it-works" className="hover:text-emerald-600 transition-colors">
-              How It Works
-            </a>
-            <a href="#categories" className="hover:text-emerald-600 transition-colors">
-              Assistance Areas
-            </a>
-            <a href="#safety" className="hover:text-emerald-600 transition-colors flex items-center gap-1">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              Privacy & Trust
-            </a>
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
             <button
-              onClick={onExploreMapClick || (() => {
-                document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
-              })}
-              className="hover:text-emerald-600 transition-colors flex items-center gap-1"
+              onClick={() => onNavigate('landing')}
+              className={`hover:text-emerald-600 transition-colors flex items-center gap-1 ${
+                currentView === 'landing' ? 'text-emerald-700 font-bold' : ''
+              }`}
             >
-              <MapPin className="w-4 h-4 text-teal-600" />
-              Coverage
+              <Home className="w-4 h-4" />
+              <span>Home</span>
             </button>
+
+            <button
+              onClick={() => onNavigate('requester')}
+              className={`hover:text-emerald-600 transition-colors flex items-center gap-1 ${
+                currentView === 'requester' ? 'text-emerald-700 font-bold' : ''
+              }`}
+            >
+              <span>Requester Portal</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('volunteer')}
+              className={`hover:text-emerald-600 transition-colors flex items-center gap-1 ${
+                currentView === 'volunteer' ? 'text-teal-700 font-bold' : ''
+              }`}
+            >
+              <UserCheck className="w-4 h-4 text-teal-600" />
+              <span>Volunteer Portal</span>
+            </button>
+
+            {currentView === 'landing' && (
+              <>
+                <a href="#how-it-works" className="hover:text-emerald-600 transition-colors">
+                  How It Works
+                </a>
+                <a href="#safety" className="hover:text-emerald-600 transition-colors flex items-center gap-1">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  Privacy & Safety
+                </a>
+              </>
+            )}
           </nav>
 
           {/* Action Buttons */}
           <div className="hidden sm:flex items-center gap-3">
-            <button
-              onClick={onVolunteerClick}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all active:scale-[0.98]"
-            >
-              <UserPlus className="w-4 h-4 text-slate-500" />
-              Volunteer Portal
-            </button>
-            <button
-              onClick={onRequestClick}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-600/30 transition-all active:scale-[0.98]"
-            >
-              <span>Request Help</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            {currentView !== 'volunteer' && (
+              <button
+                onClick={onVolunteerClick || (() => onNavigate('volunteer'))}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-all active:scale-[0.98]"
+              >
+                <UserPlus className="w-4 h-4 text-slate-500" />
+                <span>Volunteer Mode</span>
+              </button>
+            )}
+
+            {currentView !== 'requester' && (
+              <button
+                onClick={onRequestClick || (() => onNavigate('requester'))}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-600/30 transition-all active:scale-[0.98]"
+              >
+                <span>Request Help</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Mobile menu toggle */}
@@ -98,47 +141,59 @@ export const Navbar: React.FC<NavbarProps> = ({
       {mobileMenuOpen && (
         <div className="sm:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-6 space-y-3 shadow-lg">
           <div className="flex flex-col space-y-2 text-base font-medium text-slate-700">
-            <a
-              href="#how-it-works"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-md hover:bg-slate-50"
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onNavigate('landing');
+              }}
+              className="px-3 py-2 text-left rounded-md hover:bg-slate-50 flex items-center gap-2"
             >
-              How It Works
-            </a>
-            <a
-              href="#categories"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-md hover:bg-slate-50"
+              <Home className="w-4 h-4 text-slate-500" />
+              <span>Home Landing</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onNavigate('requester');
+              }}
+              className="px-3 py-2 text-left rounded-md hover:bg-slate-50 flex items-center gap-2"
             >
-              Assistance Areas
-            </a>
-            <a
-              href="#safety"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-md hover:bg-slate-50 flex items-center gap-2"
+              <span>Requester Dashboard</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onNavigate('volunteer');
+              }}
+              className="px-3 py-2 text-left rounded-md hover:bg-slate-50 flex items-center gap-2 text-teal-800"
             >
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              Privacy & Trust
-            </a>
+              <UserCheck className="w-4 h-4 text-teal-600" />
+              <span>Volunteer Dashboard</span>
+            </button>
           </div>
+
           <div className="pt-2 flex flex-col gap-2">
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                onRequestClick?.();
+                if (onRequestClick) onRequestClick();
+                else onNavigate('requester');
               }}
-              className="w-full py-2.5 px-4 rounded-lg text-center font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow"
+              className="w-full py-2.5 px-4 rounded-xl text-center font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow"
             >
               Request Assistance
             </button>
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                onVolunteerClick?.();
+                if (onVolunteerClick) onVolunteerClick();
+                else onNavigate('volunteer');
               }}
-              className="w-full py-2.5 px-4 rounded-lg text-center font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200"
+              className="w-full py-2.5 px-4 rounded-xl text-center font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300"
             >
-              Join as Volunteer
+              Volunteer Mode
             </button>
           </div>
         </div>

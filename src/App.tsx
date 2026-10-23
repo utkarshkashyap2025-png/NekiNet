@@ -7,195 +7,201 @@ import { CategoriesSection } from './components/landing/CategoriesSection';
 import { PrivacyBanner } from './components/landing/PrivacyBanner';
 import { TestimonialsSection } from './components/landing/TestimonialsSection';
 import { Footer } from './components/layout/Footer';
-import { X, Sparkles, HeartHandshake, CheckCircle2, ArrowRight } from 'lucide-react';
+import { RequesterDashboard } from './components/requester/RequesterDashboard';
+import { VolunteerDashboard } from './components/volunteer/VolunteerDashboard';
+import { INITIAL_MOCK_REQUESTS, INITIAL_MOCK_VOLUNTEER } from './data/mockData';
+import type { HelpRequest, VolunteerProfile } from './types';
+import { Info, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export function App() {
-  const [activeModal, setActiveModal] = useState<'request' | 'volunteer' | null>(null);
+  const [currentView, setCurrentView] = useState<'landing' | 'requester' | 'volunteer'>('landing');
+  const [requests, setRequests] = useState<HelpRequest[]>(INITIAL_MOCK_REQUESTS);
+  const [volunteerProfile, setVolunteerProfile] = useState<VolunteerProfile>(INITIAL_MOCK_VOLUNTEER);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleRequestClick = () => {
-    setActiveModal('request');
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const handleVolunteerClick = () => {
-    setActiveModal('volunteer');
+  // Requester Actions
+  const handleCreateRequest = (newReqData: Omit<HelpRequest, 'id' | 'createdAt' | 'distanceKm'>) => {
+    const newRequest: HelpRequest = {
+      ...newReqData,
+      id: `req-${Date.now().toString().slice(-4)}`,
+      createdAt: 'Just now',
+      distanceKm: 0.5, // Relative mock distance for demonstration
+    };
+
+    setRequests([newRequest, ...requests]);
+    showToast('✨ Your help request has been broadcasted to nearby neighbors!');
   };
 
-  const closeModal = () => {
-    setActiveModal(null);
+  const handleCancelRequest = (requestId: string) => {
+    setRequests(
+      requests.map((r) =>
+        r.id === requestId ? { ...r, status: 'cancelled' } : r
+      )
+    );
+    showToast('Your request has been cancelled.');
+  };
+
+  const handleSubmitFeedback = (requestId: string, rating: number, comment: string) => {
+    setRequests(
+      requests.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'completed',
+              feedback: {
+                id: `fb-${Date.now()}`,
+                rating,
+                comment,
+                createdAt: 'Just now',
+                volunteerGratitude: 'Thank you for your warm words! Glad to assist.',
+              },
+            }
+          : r
+      )
+    );
+
+    // Update volunteer stats
+    setVolunteerProfile((prev) => ({
+      ...prev,
+      completedTasksCount: prev.completedTasksCount + 1,
+      rating: Number(((prev.rating * prev.completedTasksCount + rating) / (prev.completedTasksCount + 1)).toFixed(1)),
+    }));
+
+    showToast('⭐ Thank you for rating and reviewing your volunteer!');
+  };
+
+  // Volunteer Actions
+  const handleAcceptTask = (requestId: string) => {
+    setRequests(
+      requests.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'matched',
+              volunteerId: volunteerProfile.id,
+              volunteerName: volunteerProfile.name,
+              volunteerPhone: volunteerProfile.phone,
+            }
+          : r
+      )
+    );
+    showToast(`🤝 You accepted task #${requestId}. Contact details now unlocked.`);
+  };
+
+  const handleStartTask = (requestId: string) => {
+    setRequests(
+      requests.map((r) =>
+        r.id === requestId ? { ...r, status: 'in_progress' } : r
+      )
+    );
+    showToast(`Task #${requestId} is now marked In Progress.`);
+  };
+
+  const handleCompleteTask = (requestId: string) => {
+    setRequests(
+      requests.map((r) =>
+        r.id === requestId ? { ...r, status: 'completed' } : r
+      )
+    );
+    setVolunteerProfile((prev) => ({
+      ...prev,
+      completedTasksCount: prev.completedTasksCount + 1,
+    }));
+    showToast(`🎉 Excellent work! Task #${requestId} marked as Completed.`);
+  };
+
+  const handleUpdateVolunteerProfile = (updated: VolunteerProfile) => {
+    setVolunteerProfile(updated);
+    showToast('Volunteer profile settings updated successfully.');
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-emerald-500 selection:text-white">
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-300">
+          <div className="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm border border-slate-700">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+        </div>
+      )}
+
       {/* Top Banner Notice */}
-      <div className="bg-emerald-900 text-emerald-100 px-4 py-2 text-center text-xs sm:text-sm font-medium flex items-center justify-center gap-2">
+      <div className="bg-slate-900 text-slate-200 px-4 py-2 text-center text-xs font-medium flex items-center justify-center gap-2 border-b border-slate-800">
         <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span>NekiNet Phase 1 Active: Foundation, Tailwind & Design System initialized.</span>
+        <span>
+          <strong>NekiNet Phase 2 Active:</strong> Requester & Volunteer Dashboards with simulated AI parsing placeholder & local workflow state.
+        </span>
       </div>
 
       {/* Navigation */}
       <Navbar
-        onRequestClick={handleRequestClick}
-        onVolunteerClick={handleVolunteerClick}
-        onExploreMapClick={() => {
-          document.getElementById('safety')?.scrollIntoView({ behavior: 'smooth' });
-        }}
+        currentView={currentView}
+        onNavigate={(view) => setCurrentView(view)}
+        onRequestClick={() => setCurrentView('requester')}
+        onVolunteerClick={() => setCurrentView('volunteer')}
       />
 
-      {/* Main Content */}
+      {/* Main View Router */}
       <main className="flex-1">
-        <HeroSection
-          onRequestClick={handleRequestClick}
-          onVolunteerClick={handleVolunteerClick}
-        />
+        {currentView === 'landing' && (
+          <>
+            <HeroSection
+              onRequestClick={() => setCurrentView('requester')}
+              onVolunteerClick={() => setCurrentView('volunteer')}
+            />
 
-        <ImpactStats />
+            <ImpactStats />
 
-        <HowItWorks
-          onRequestClick={handleRequestClick}
-          onVolunteerClick={handleVolunteerClick}
-        />
+            <HowItWorks
+              onRequestClick={() => setCurrentView('requester')}
+              onVolunteerClick={() => setCurrentView('volunteer')}
+            />
 
-        <CategoriesSection
-          onCategorySelect={(cat) => {
-            handleRequestClick();
-          }}
-        />
+            <CategoriesSection
+              onCategorySelect={() => {
+                setCurrentView('requester');
+              }}
+            />
 
-        <PrivacyBanner />
+            <PrivacyBanner />
 
-        <TestimonialsSection />
+            <TestimonialsSection />
+          </>
+        )}
+
+        {currentView === 'requester' && (
+          <RequesterDashboard
+            requests={requests}
+            onCreateRequest={handleCreateRequest}
+            onCancelRequest={handleCancelRequest}
+            onSubmitFeedback={handleSubmitFeedback}
+            onSwitchToVolunteer={() => setCurrentView('volunteer')}
+          />
+        )}
+
+        {currentView === 'volunteer' && (
+          <VolunteerDashboard
+            profile={volunteerProfile}
+            requests={requests}
+            onUpdateProfile={handleUpdateVolunteerProfile}
+            onAcceptTask={handleAcceptTask}
+            onStartTask={handleStartTask}
+            onCompleteTask={handleCompleteTask}
+            onSwitchToRequester={() => setCurrentView('requester')}
+          />
+        )}
       </main>
 
       {/* Footer */}
       <Footer />
-
-      {/* Phase 2 Teaser Modal: Request Assistance Flow */}
-      {activeModal === 'request' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Request Assistance</h3>
-                <p className="text-xs text-slate-500">AI-Assisted Request Creation (Phase 2 Preview)</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 text-sm text-slate-600">
-              <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200/80">
-                <p className="text-xs font-semibold text-emerald-900 mb-1">
-                  Ready for Phase 2 Implementation:
-                </p>
-                <ul className="text-xs text-emerald-800 space-y-1.5">
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    Interactive Natural Language input box with Gemini AI parsing.
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    Review & Edit category, urgency level, and required volunteer skills.
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    Approximate geocoded location picker without revealing exact door address.
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    Live request status tracking dashboard.
-                  </li>
-                </ul>
-              </div>
-
-              <p className="text-xs text-slate-500">
-                Phase 1 has established the responsive foundation. Confirm to proceed to Phase 2 to build the complete interactive Requester & Volunteer Dashboards!
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
-              >
-                Close Preview
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Phase 2 Teaser Modal: Volunteer Portal Flow */}
-      {activeModal === 'volunteer' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-xl bg-teal-100 text-teal-700">
-                <HeartHandshake className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Volunteer Portal</h3>
-                <p className="text-xs text-slate-500">Local Opportunities & Skills (Phase 2 Preview)</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 text-sm text-slate-600">
-              <div className="bg-teal-50 rounded-xl p-4 border border-teal-200/80">
-                <p className="text-xs font-semibold text-teal-900 mb-1">
-                  Ready for Phase 2 Implementation:
-                </p>
-                <ul className="text-xs text-teal-800 space-y-1.5">
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                    Configure assistance radius (1km, 3km, 5km) and active days/hours.
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                    Select verified skills (Elder Companionship, Errands, Driving, Tech).
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                    Live open requests feed with urgency badges and distance indicators.
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                    One-click task claim and secure coordinator chat drawer.
-                  </li>
-                </ul>
-              </div>
-
-              <p className="text-xs text-slate-500">
-                Phase 1 is now ready for your review and confirmation!
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
-              >
-                Close Preview
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
