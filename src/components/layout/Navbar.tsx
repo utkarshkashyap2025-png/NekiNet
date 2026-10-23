@@ -11,13 +11,14 @@ import {
   UserCheck,
   User,
   LogOut,
-  Database
+  MapPin,
+  Map
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface NavbarProps {
-  currentView: 'landing' | 'requester' | 'volunteer';
-  onNavigate: (view: 'landing' | 'requester' | 'volunteer') => void;
+  currentView: 'landing' | 'requester' | 'volunteer' | 'map';
+  onNavigate: (view: 'landing' | 'requester' | 'volunteer' | 'map') => void;
   onRequestClick?: () => void;
   onVolunteerClick?: () => void;
   onOpenAuthModal: () => void;
@@ -31,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuthModal,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isConfigured, demoUserRole, signOut } = useAuth();
+  const { user, isConfigured, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
@@ -63,7 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+          <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-slate-600">
             <button
               onClick={() => onNavigate('landing')}
               className={`hover:text-emerald-600 transition-colors flex items-center gap-1 ${
@@ -72,6 +73,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Home className="w-4 h-4" />
               <span>Home</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('map')}
+              className={`hover:text-teal-600 transition-colors flex items-center gap-1 ${
+                currentView === 'map' ? 'text-teal-700 font-bold' : ''
+              }`}
+            >
+              <Map className="w-4 h-4 text-teal-600" />
+              <span>Nearby Map</span>
             </button>
 
             <button
@@ -85,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => onNavigate('volunteer')}
-              className={`hover:text-emerald-600 transition-colors flex items-center gap-1 ${
+              className={`hover:text-teal-600 transition-colors flex items-center gap-1 ${
                 currentView === 'volunteer' ? 'text-teal-700 font-bold' : ''
               }`}
             >
@@ -184,6 +195,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Home className="w-4 h-4 text-slate-500" />
               <span>Home Landing</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onNavigate('map');
+              }}
+              className="px-3 py-2 text-left rounded-md hover:bg-slate-50 flex items-center gap-2 text-teal-800 font-semibold"
+            >
+              <Map className="w-4 h-4 text-teal-600" />
+              <span>Nearby Volunteer Map</span>
             </button>
 
             <button

@@ -9,6 +9,8 @@ import { TestimonialsSection } from './components/landing/TestimonialsSection';
 import { Footer } from './components/layout/Footer';
 import { RequesterDashboard } from './components/requester/RequesterDashboard';
 import { VolunteerDashboard } from './components/volunteer/VolunteerDashboard';
+import { HyperlocalExploreView } from './components/map/HyperlocalExploreView';
+import { VolunteerTaskActionModal } from './components/volunteer/VolunteerTaskActionModal';
 import { AuthModal } from './components/auth/AuthModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { supabaseService } from './services/supabaseService';
@@ -18,12 +20,13 @@ import { CheckCircle2, Database, AlertCircle } from 'lucide-react';
 
 function AppContent() {
   const { isConfigured, user } = useAuth();
-  const [currentView, setCurrentView] = useState<'landing' | 'requester' | 'volunteer'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'requester' | 'volunteer' | 'map'>('landing');
   const [requests, setRequests] = useState<HelpRequest[]>(INITIAL_MOCK_REQUESTS);
   const [volunteerProfile, setVolunteerProfile] = useState<VolunteerProfile>(INITIAL_MOCK_VOLUNTEER);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalDefaultRole, setAuthModalDefaultRole] = useState<'requester' | 'volunteer'>('requester');
+  const [mapSelectedTask, setMapSelectedTask] = useState<HelpRequest | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -176,7 +179,7 @@ function AppContent() {
           </span>
         ) : (
           <span>
-            <strong>Phase 3 Backend:</strong> Supabase schema & RLS migrations ready. Operating in safe demo fallback until <code className="bg-slate-800 px-1.5 py-0.5 rounded text-amber-300">.env.local</code> credentials are added.
+            <strong>Phase 5 Hyperlocal Matching:</strong> Leaflet & OpenStreetMap active with spatial privacy fuzzing (~400m). Running in demo mode.
           </span>
         )}
       </div>
@@ -218,6 +221,16 @@ function AppContent() {
           </>
         )}
 
+        {currentView === 'map' && (
+          <HyperlocalExploreView
+            requests={requests}
+            volunteerProfile={volunteerProfile}
+            onSelectRequest={(req) => setMapSelectedTask(req)}
+            onSwitchToRequester={() => setCurrentView('requester')}
+            onSwitchToVolunteer={() => setCurrentView('volunteer')}
+          />
+        )}
+
         {currentView === 'requester' && (
           <RequesterDashboard
             requests={requests}
@@ -251,6 +264,26 @@ function AppContent() {
         defaultRole={authModalDefaultRole}
         onAuthSuccess={() => {
           showToast('Authentication updated.');
+        }}
+      />
+
+      {/* Task Action Modal triggered from Map click */}
+      <VolunteerTaskActionModal
+        request={mapSelectedTask}
+        volunteer={volunteerProfile}
+        isOpen={!!mapSelectedTask}
+        onClose={() => setMapSelectedTask(null)}
+        onAcceptTask={(id) => {
+          handleAcceptTask(id);
+          setMapSelectedTask(null);
+        }}
+        onStartTask={(id) => {
+          handleStartTask(id);
+          setMapSelectedTask(null);
+        }}
+        onCompleteTask={(id) => {
+          handleCompleteTask(id);
+          setMapSelectedTask(null);
         }}
       />
     </div>
